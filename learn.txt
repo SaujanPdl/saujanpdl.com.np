@@ -1,0 +1,6 @@
+tailwind
+react
+node js
+express
+mangoose
+https://tinyurl.com/SaujanPaudel
