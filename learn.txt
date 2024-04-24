@@ -3,4 +3,4 @@ react
 node js
 express
 mangoose
-https://tinyurl.com/SaujanPaudel
+https://saujanpdl.com.np
