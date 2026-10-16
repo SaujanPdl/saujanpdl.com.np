@@ -12,6 +12,7 @@ import {
   ChevronRight,
   Code2,
   Copy,
+  ExternalLink,
   FileText,
   FolderGit2,
   GraduationCap,
@@ -104,10 +105,12 @@ const projectEntries: ProjectEntry[] = [
     summary: 'A connected academic workspace for tracking study, reviews, and student operations in one system.',
     architecture: ['Notion Formulas 2.0', 'Relational databases', 'Digital product design'],
     specs: ['Academic tracking dashboard', 'Automated study scheduling', 'Reusable workspace architecture'],
-    status: 'Concept & Architecture',
-    href: 'https://github.com/SaujanPdl',
+    status: 'Live Notion Template',
+    href: 'https://citrine-bench-81e.notion.site/Academic-OS-3eaace00e6d18044b51ed4ea972c3c25?source=copy_link',
     icon: GraduationCap,
     tone: 'amber',
+    actionLabel: 'View Notion Template',
+    actionType: 'notion',
   },
   {
     id: 'sagarmatha',
@@ -335,11 +338,17 @@ function ProjectCard({
         <a
           href={project.href}
           target="_blank"
-          rel="noreferrer"
+          rel="noopener noreferrer"
           className="repo-link"
           onClick={(e) => e.stopPropagation()}
         >
-          <GitHubMark /> View Code <ArrowUpRight size={14} />
+          {project.actionType === 'notion' ? (
+            <ExternalLink size={14} className="text-amber-400" />
+          ) : (
+            <GitHubMark />
+          )}
+          <span>{project.actionLabel || 'View Code'}</span>
+          <ArrowUpRight size={14} />
         </a>
         <span className={`project-status ${project.status.includes('Development') ? 'project-status-wip' : ''}`}>
           {project.status.includes('Development') && '🚧 '}{project.status}

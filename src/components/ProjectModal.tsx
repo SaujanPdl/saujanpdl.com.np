@@ -1,6 +1,6 @@
 import { useEffect, type ComponentType } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowUpRight, CheckCircle2, ShieldCheck, TerminalSquare, FolderGit2, GraduationCap, Network, X } from 'lucide-react';
+import { ArrowUpRight, CheckCircle2, ExternalLink, ShieldCheck, TerminalSquare, FolderGit2, GraduationCap, Network, X } from 'lucide-react';
 import { GitHubMark } from './SocialMarks';
 
 export interface ProjectEntry {
@@ -15,6 +15,8 @@ export interface ProjectEntry {
   href: string;
   icon: ComponentType<{ size?: number; className?: string }>;
   tone: string;
+  actionLabel?: string;
+  actionType?: 'code' | 'notion' | 'external';
 }
 
 interface ProjectModalProps {
@@ -149,11 +151,15 @@ export default function ProjectModal({ project, onClose }: ProjectModalProps) {
             <a
               href={project.href}
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-violet-600 hover:bg-violet-500 text-white font-medium text-xs font-mono transition-all duration-200 shadow-[0_0_20px_rgba(139,92,246,0.35)] hover:shadow-[0_0_25px_rgba(139,92,246,0.5)]"
             >
-              <GitHubMark />
-              <span>View Repository</span>
+              {project.actionType === 'notion' ? (
+                <ExternalLink size={14} />
+              ) : (
+                <GitHubMark />
+              )}
+              <span>{project.actionLabel || 'View Repository'}</span>
               <ArrowUpRight size={14} />
             </a>
           </div>
