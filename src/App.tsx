@@ -32,6 +32,7 @@ import {
   Routes,
   useLocation,
 } from 'react-router-dom';
+import ProjectModal, { type ProjectEntry } from './components/ProjectModal';
 import ResumeModal from './components/ResumeModal';
 import { DiscordMark, GitHubMark, LinkedInMark } from './components/SocialMarks';
 
@@ -43,7 +44,7 @@ const links = [
   { label: 'Contact', to: '/contact' },
 ];
 
-const projectEntries = [
+const projectEntries: ProjectEntry[] = [
   {
     id: 'discord',
     category: 'Backend & Bots',
@@ -177,18 +178,12 @@ const terminalTabs = {
     '        shutil.move(str(item), target / item.name)',
   ],
   'bot_engine.ts': [
-    'const heartbeat = async () => {',
-    '  const status = await discord.ping();',
-    '  await prisma.telemetry.create({',
-    '    data: {',
-    '      service: "community-bot",',
-    '      status: status.ok ? "ready" : "degraded",',
-    '      observedAt: new Date(),',
-    '    },',
-    '  });',
-    '};',
-    '',
-    'setInterval(heartbeat, 30_000);',
+    'const client = new Client({ intents: [Guilds, Messages] });',
+    'client.on("messageCreate", async (message) => {',
+    '  if (message.author.bot) return;',
+    '  await autoModEngine.inspect(message);',
+    '  telemetry.logEvent("packet_received", { author: message.author.id });',
+    '});',
   ],
   'telemetry.sh': [
     '#!/usr/bin/env bash',
@@ -286,7 +281,13 @@ function CopyButton({ kind, onCopy, status }: { kind: CopyKind; onCopy: (kind: C
   );
 }
 
-function ProjectCard({ project }: { project: (typeof projectEntries)[number] }) {
+function ProjectCard({
+  project,
+  onSelect,
+}: {
+  project: ProjectEntry;
+  onSelect?: (project: ProjectEntry) => void;
+}) {
   const Icon = project.icon;
   return (
     <motion.article
@@ -294,36 +295,56 @@ function ProjectCard({ project }: { project: (typeof projectEntries)[number] }) 
       layout
       whileHover={{ y: -4 }}
       transition={{ type: 'spring', stiffness: 260, damping: 20 }}
-      onMouseMove={(event) => Object.assign(event.currentTarget.style, spotlight(event))}
-      className={`project-route-card spotlight-card tone-${project.tone}`}
+      onMouseMove={(e) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        e.currentTarget.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+        e.currentTarget.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
+      }}
+      onClick={() => onSelect?.(project)}
+      className={`project-route-card group relative overflow-hidden bg-[#0a0a10]/60 backdrop-blur-xl border border-white/[0.08] shadow-[0_8px_32px_0_rgba(0,0,0,0.36)] rounded-2xl p-6 transition-all duration-300 hover:border-violet-500/40 cursor-pointer spotlight-card tone-${project.tone}`}
     >
-      <div className="project-card-top">
+      {/* Interactive Cursor Spotlight */}
+      <div
+        className="pointer-events-none absolute -inset-px rounded-2xl opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+        style={{
+          background: 'radial-gradient(400px circle at var(--mouse-x, 0px) var(--mouse-y, 0px), rgba(139, 92, 246, 0.15), transparent 80%)',
+        }}
+        aria-hidden="true"
+      />
+
+      <div className="project-card-top relative z-10">
         <span className="project-icon"><Icon size={18} /></span>
         <span className="eyebrow">{project.category.toUpperCase()}</span>
         <span className="project-count">{project.number} / 05</span>
       </div>
-      <h2>{project.name}</h2>
-      <p className="project-summary">{project.summary}</p>
-      <div className="project-detail-block">
+      <h2 className="relative z-10">{project.name}</h2>
+      <p className="project-summary relative z-10">{project.summary}</p>
+      <div className="project-detail-block relative z-10">
         <p className="detail-label">ARCHITECTURE</p>
         <div className="tech-list">
           {project.architecture.map((tech) => <span className="tech-pill" key={tech}>{tech}</span>)}
         </div>
       </div>
-      <div className="project-detail-block">
+      <div className="project-detail-block relative z-10">
         <p className="detail-label">SYSTEM SPECS</p>
         <ul className="project-specs">
           {project.specs.map((spec) => <li key={spec}><span />{spec}</li>)}
         </ul>
       </div>
-      <div className="project-card-bottom">
-        <a href={project.href} target="_blank" rel="noreferrer" className="repo-link">
-            <GitHubMark /> View Code <ArrowUpRight size={14} />
+      <div className="project-card-bottom relative z-10">
+        <a
+          href={project.href}
+          target="_blank"
+          rel="noreferrer"
+          className="repo-link"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <GitHubMark /> View Code <ArrowUpRight size={14} />
         </a>
-          <span className={`project-status ${project.status.includes('Development') ? 'project-status-wip' : ''}`}>
-            {project.status.includes('Development') && '🚧 '}{project.status}
-          </span>
-        </div>
+        <span className={`project-status ${project.status.includes('Development') ? 'project-status-wip' : ''}`}>
+          {project.status.includes('Development') && '🚧 '}{project.status}
+        </span>
+      </div>
     </motion.article>
   );
 }
@@ -331,9 +352,11 @@ function ProjectCard({ project }: { project: (typeof projectEntries)[number] }) 
 function HomePage({
   onCopy,
   copyStatus,
+  onOpenResume,
 }: {
   onCopy: (kind: CopyKind) => void;
   copyStatus: CopyStatus;
+  onOpenResume?: () => void;
 }) {
   const [tab, setTab] = useState<TerminalTab>('automation.py');
   const tabs = Object.keys(terminalTabs) as TerminalTab[];
@@ -341,26 +364,49 @@ function HomePage({
   return (
     <motion.section className="route-page home-route" variants={reveal} initial="hidden" animate="show" exit={{ opacity: 0, y: -12 }} transition={{ type: 'spring', stiffness: 260, damping: 20 }}>
       <div className="home-copy">
-        <motion.p variants={revealItem} className="hero-name">Saujan Paudel</motion.p>
-        <motion.div variants={revealItem} className="availability-pill">
-          <span className="availability-pulse"><span /></span> Active <span className="availability-separator">•</span> AI and DS Undergrad <span className="availability-separator">•</span> Shramik Shanti Campus (PU)
+        <motion.p variants={revealItem} className="text-zinc-400 font-mono text-sm mb-3">Saujan Paudel</motion.p>
+        <motion.div variants={revealItem} className="flex flex-wrap items-center gap-2 mb-4">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-emerald-500/30 bg-emerald-950/20 text-emerald-400 text-xs font-mono">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span>Active · AI and DS Undergrad · Shramik Shanti Campus (PU)</span>
+          </div>
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-violet-500/30 bg-violet-950/20 text-violet-300 text-xs font-mono">
+            <span className="w-2 h-2 rounded-full bg-violet-400 animate-pulse" />
+            <span>Discord Bot Architect &amp; Community Mod</span>
+          </div>
         </motion.div>
-        <motion.p variants={revealItem} className="eyebrow home-eyebrow">AI &amp; DATA SCIENCE <span>/</span> PYTHON <span>/</span> COMMUNITY SYSTEMS</motion.p>
-        <motion.h1 variants={revealItem} className="route-title hero-title">
+        <motion.p variants={revealItem} className="text-xs font-mono tracking-widest uppercase text-indigo-400/80 mb-3">AI &amp; DATA SCIENCE / DISCORD SYSTEMS / AUTOMATION</motion.p>
+        <motion.h1 variants={revealItem} className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-[1.1] mb-6">
           Engineering AI &amp; Data Pipelines, Python Automation &amp; Discord Systems.
         </motion.h1>
-        <motion.p variants={revealItem} className="home-summary">
-          AI and Data Science undergraduate at Shramik Shanti Campus, a constituent campus of Pokhara University in Kathmandu. Focused on Python filesystem pipelines, Discord bot architectures, and developer systems.
+        <motion.p variants={revealItem} className="text-zinc-400 text-base leading-relaxed max-w-xl mb-8">
+          AI and Data Science undergraduate at Shramik Shanti Campus (Pokhara University) in Kathmandu. Active Discord moderator and bot developer engineering scalable community bots, automation pipelines, and Python backend services.
         </motion.p>
-        <motion.div variants={revealItem} className="home-actions">
+        <motion.div variants={revealItem} className="home-actions flex flex-wrap items-center gap-3 mb-8">
           <Magnetic>
-            <Link to="/projects" className="button-primary">View Projects <ArrowRight size={16} /></Link>
+            <Link
+              to="/projects"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-violet-600 hover:bg-violet-500 text-white font-medium text-sm transition-all duration-200 shadow-[0_0_20px_rgba(139,92,246,0.35)] hover:shadow-[0_0_25px_rgba(139,92,246,0.5)] hover:-translate-y-0.5"
+            >
+              View Projects <ArrowUpRight size={16} />
+            </Link>
           </Magnetic>
           <Magnetic>
-            <button onClick={() => onCopy('email')} className="button-secondary">
-              {copyStatus?.kind === 'email' && copyStatus.result === 'copied' ? <Check size={15} className="text-emerald-300" /> : <Copy size={14} />}
-              {copyStatus?.kind === 'email' && copyStatus.result === 'copied' ? 'Copied!' : copyStatus?.kind === 'email' && copyStatus.result === 'error' ? 'Copy Failed' : 'Copy Email'}
+            <button
+              type="button"
+              onClick={onOpenResume}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-white/[0.12] bg-[#0a0a10]/60 hover:bg-white/[0.06] text-zinc-200 font-medium text-sm backdrop-blur-xl transition-all duration-200 hover:-translate-y-0.5"
+            >
+              <FileText size={15} /> Download Resume <ArrowRight size={14} className="rotate-90" />
             </button>
+          </Magnetic>
+          <Magnetic>
+            <Link
+              to="/contact"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-zinc-400 hover:text-white font-medium text-sm transition-colors duration-200 group"
+            >
+              Get in Touch <ArrowRight size={15} className="transition-transform group-hover:translate-x-1" />
+            </Link>
           </Magnetic>
         </motion.div>
         <motion.div variants={revealItem} className="home-social-links">
@@ -431,7 +477,7 @@ function HomePage({
             ))}
             <div className="terminal-output">
               <span className="telemetry-dot" />
-              {tab === 'automation.py' ? 'workspace pipeline initialized' : tab === 'bot_engine.ts' ? 'heartbeat scheduled · interval 30s' : 'uptime stable · diagnostics green'}
+              {tab === 'automation.py' ? 'workspace pipeline initialized' : tab === 'bot_engine.ts' ? 'gateway online · automod active' : 'uptime stable · diagnostics green'}
               <span className="blinking-cursor">▍</span>
             </div>
           </div>
@@ -451,16 +497,69 @@ function AboutPage() {
         <p>I’m Saujan, a Bachelor in AI and DS undergraduate at Shramik Shanti Campus, a constituent campus of Pokhara University in Kathmandu Valley. I focus on practical Python engineering, AI and data foundations, Discord bot architecture, automation pipelines, and developer tooling.</p>
       </motion.header>
       <div className="about-grid">
-        <motion.article variants={revealItem} className="philosophy-card frosted-card">
-          <span className="section-icon"><TerminalSquare size={18} /></span>
-          <p className="eyebrow mt-5">ENGINEERING PHILOSOPHY</p>
-          <h2>Make the boring parts reliable.</h2>
-          <p>I’m drawn to the quiet engineering: scripts that safely handle messy files, backend services that report their own health, and tools that make people’s workflows easier to trust.</p>
-          <div className="philosophy-tags"><span>Understand the problem</span><ChevronRight size={13} /><span>Build the smallest useful system</span><ChevronRight size={13} /><span>Measure and improve</span></div>
+        <motion.article
+          variants={revealItem}
+          onMouseMove={(e) => {
+            const rect = e.currentTarget.getBoundingClientRect();
+            e.currentTarget.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+            e.currentTarget.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
+          }}
+          className="philosophy-card group relative overflow-hidden bg-[#0a0a10]/60 backdrop-blur-xl border border-white/[0.08] shadow-[0_8px_32px_0_rgba(0,0,0,0.36)] rounded-2xl"
+        >
+          <div
+            className="pointer-events-none absolute -inset-px rounded-2xl opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+            style={{
+              background: 'radial-gradient(400px circle at var(--mouse-x, 0px) var(--mouse-y, 0px), rgba(139, 92, 246, 0.15), transparent 80%)',
+            }}
+            aria-hidden="true"
+          />
+          <div className="relative z-10">
+            <span className="section-icon"><TerminalSquare size={18} /></span>
+            <p className="eyebrow mt-5">ENGINEERING PHILOSOPHY</p>
+            <h2>Make the boring parts reliable.</h2>
+            <p>I’m drawn to the quiet engineering: scripts that safely handle messy files, backend services that report their own health, and tools that make people’s workflows easier to trust.</p>
+            <div className="philosophy-tags"><span>Understand the problem</span><ChevronRight size={13} /><span>Build the smallest useful system</span><ChevronRight size={13} /><span>Measure and improve</span></div>
+          </div>
         </motion.article>
         <motion.aside variants={revealItem} className="about-aside">
-          <div className="aside-stat frosted-card"><span className="aside-stat-value">Bachelor in AI and DS</span><span>Academic program</span><b>Shramik Shanti Campus, Pokhara University (Constituent Campus)</b></div>
-          <div className="aside-stat frosted-card"><span className="aside-stat-value">NP</span><span>Based in</span><b>Kathmandu Valley, Nepal · UTC+5:45</b></div>
+          <div
+            onMouseMove={(e) => {
+              const rect = e.currentTarget.getBoundingClientRect();
+              e.currentTarget.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+              e.currentTarget.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
+            }}
+            className="aside-stat group relative overflow-hidden bg-[#0a0a10]/60 backdrop-blur-xl border border-white/[0.08] shadow-[0_8px_32px_0_rgba(0,0,0,0.36)] rounded-2xl"
+          >
+            <div
+              className="pointer-events-none absolute -inset-px rounded-2xl opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+              style={{
+                background: 'radial-gradient(400px circle at var(--mouse-x, 0px) var(--mouse-y, 0px), rgba(139, 92, 246, 0.15), transparent 80%)',
+              }}
+              aria-hidden="true"
+            />
+            <div className="relative z-10">
+              <span className="aside-stat-value">Bachelor in AI and DS</span><span>Academic program</span><b>Shramik Shanti Campus, Pokhara University (Constituent Campus)</b>
+            </div>
+          </div>
+          <div
+            onMouseMove={(e) => {
+              const rect = e.currentTarget.getBoundingClientRect();
+              e.currentTarget.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+              e.currentTarget.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
+            }}
+            className="aside-stat group relative overflow-hidden bg-[#0a0a10]/60 backdrop-blur-xl border border-white/[0.08] shadow-[0_8px_32px_0_rgba(0,0,0,0.36)] rounded-2xl"
+          >
+            <div
+              className="pointer-events-none absolute -inset-px rounded-2xl opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+              style={{
+                background: 'radial-gradient(400px circle at var(--mouse-x, 0px) var(--mouse-y, 0px), rgba(139, 92, 246, 0.15), transparent 80%)',
+              }}
+              aria-hidden="true"
+            />
+            <div className="relative z-10">
+              <span className="aside-stat-value">NP</span><span>Based in</span><b>Kathmandu Valley, Nepal · UTC+5:45</b>
+            </div>
+          </div>
         </motion.aside>
       </div>
       <motion.div variants={revealItem} className="skills-matrix-heading">
@@ -471,16 +570,34 @@ function AboutPage() {
         {skillGroups.map((group, index) => {
           const Icon = group.icon;
           return (
-            <motion.article variants={revealItem} key={group.title} className={`skill-matrix-card frosted-card skill-${group.color}`}>
-              <div className="skill-matrix-top"><span className="project-icon"><Icon size={17} /></span><span className="eyebrow">DOMAIN 0{index + 1}</span></div>
-              <h3>{group.title}</h3>
-              <div className="skill-level-label"><span>Experience context</span><span>{group.level}</span></div>
-              <div className="tech-list">{group.skills.map((skill) => <span key={skill} className="tech-pill">{skill}</span>)}</div>
+            <motion.article
+              variants={revealItem}
+              key={group.title}
+              onMouseMove={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                e.currentTarget.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+                e.currentTarget.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
+              }}
+              className={`skill-matrix-card group relative overflow-hidden bg-[#0a0a10]/60 backdrop-blur-xl border border-white/[0.08] shadow-[0_8px_32px_0_rgba(0,0,0,0.36)] rounded-2xl p-5 transition-all duration-300 hover:border-violet-500/40 skill-${group.color}`}
+            >
+              {/* Interactive Cursor Spotlight */}
+              <div
+                className="pointer-events-none absolute -inset-px rounded-2xl opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                style={{
+                  background: 'radial-gradient(400px circle at var(--mouse-x, 0px) var(--mouse-y, 0px), rgba(139, 92, 246, 0.15), transparent 80%)',
+                }}
+                aria-hidden="true"
+              />
+
+              <div className="skill-matrix-top relative z-10"><span className="project-icon"><Icon size={17} /></span><span className="eyebrow">DOMAIN 0{index + 1}</span></div>
+              <h3 className="relative z-10">{group.title}</h3>
+              <div className="skill-level-label relative z-10"><span>Experience context</span><span>{group.level}</span></div>
+              <div className="tech-list relative z-10">{group.skills.map((skill) => <span key={skill} className="tech-pill">{skill}</span>)}</div>
             </motion.article>
           );
         })}
       </div>
-      <motion.div variants={revealItem} className="academic-strip">
+      <motion.div variants={revealItem} className="academic-strip bg-[#0a0a10]/60 backdrop-blur-xl border border-white/[0.08] shadow-[0_8px_32px_0_rgba(0,0,0,0.36)] rounded-xl">
         <GraduationCap size={18} /><span>AI &amp; Data Science foundations</span><b>Foundational AI algorithms</b><i /><b>Statistical analysis</b><i /><b>Model workflows</b>
       </motion.div>
     </motion.section>
@@ -490,13 +607,14 @@ function AboutPage() {
 function ProjectsPage() {
   const filters = ['All', 'Backend & Bots', 'Python Automation', 'Productivity Systems', 'Community & Gaming'];
   const [filter, setFilter] = useState('All');
+  const [selectedProject, setSelectedProject] = useState<ProjectEntry | null>(null);
   const visibleProjects = projectEntries.filter((project) => filter === 'All' || project.category === filter);
   return (
     <motion.section className="route-page inner-route" variants={reveal} initial="hidden" animate="show" exit={{ opacity: 0, y: -12 }} transition={{ type: 'spring', stiffness: 260, damping: 20 }}>
       <motion.header variants={revealItem} className="route-heading projects-heading">
         <p className="eyebrow">PROJECT ARCHIVE <span>/</span> SELECTED SYSTEMS</p>
         <h1 className="route-title">Ideas, translated into working systems.</h1>
-        <p>Case studies from automation, community infrastructure, and personal knowledge systems. No demo theater—just the architecture and source.</p>
+        <p>Case studies from automation, community infrastructure, and personal knowledge systems. Click any card to inspect architecture specifications and direct GitHub links.</p>
       </motion.header>
       <motion.div variants={revealItem} className="project-filters" role="group" aria-label="Filter projects">
         {filters.map((item) => (
@@ -509,10 +627,26 @@ function ProjectsPage() {
       </motion.div>
       <motion.div layout variants={reveal} initial="hidden" animate="show" className="project-route-grid">
         <AnimatePresence mode="popLayout">
-          {visibleProjects.map((project) => <ProjectCard key={project.id} project={project} />)}
+          {visibleProjects.map((project) => (
+            <ProjectCard
+              key={project.id}
+              project={project}
+              onSelect={(p) => setSelectedProject(p)}
+            />
+          ))}
         </AnimatePresence>
       </motion.div>
       <motion.div variants={revealItem} className="archive-note"><span className="telemetry-dot" /> More experiments live in the <a href="https://github.com/SaujanPdl" target="_blank" rel="noreferrer">GitHub archive <ArrowUpRight size={13} /></a></motion.div>
+
+      {/* Centered Glassmorphic Project Modal */}
+      <AnimatePresence>
+        {selectedProject && (
+          <ProjectModal
+            project={selectedProject}
+            onClose={() => setSelectedProject(null)}
+          />
+        )}
+      </AnimatePresence>
     </motion.section>
   );
 }
@@ -531,7 +665,7 @@ function LeadershipPage() {
         href="https://discord.gg/myBBbxVChR"
         target="_blank"
         rel="noreferrer"
-        className="discord-community-card"
+        className="discord-community-card group relative overflow-hidden bg-[#0a0a10]/60 backdrop-blur-xl border border-white/[0.08] shadow-[0_8px_32px_0_rgba(0,0,0,0.36)] rounded-2xl"
       >
         <span className="discord-community-icon"><DiscordMark /></span>
         <span className="discord-community-copy">
@@ -545,7 +679,7 @@ function LeadershipPage() {
         variants={revealItem}
         whileHover={{ y: -3 }}
         transition={{ type: 'spring', stiffness: 260, damping: 20 }}
-        className="discord-community-card cfc-community-card"
+        className="discord-community-card cfc-community-card group relative overflow-hidden bg-[#0a0a10]/60 backdrop-blur-xl border border-white/[0.08] shadow-[0_8px_32px_0_rgba(0,0,0,0.36)] rounded-2xl"
       >
         <span className="discord-community-icon cfc-community-icon"><Users size={23} /></span>
         <span className="discord-community-copy">
@@ -567,7 +701,7 @@ function ContactPage({ onCopy, status }: { onCopy: (kind: CopyKind) => void; sta
         <h1 className="route-title">Have a useful problem in mind?</h1>
         <p>Tell me what you’re trying to make easier. I’m open to meaningful projects, internships, and collaborations.</p>
       </motion.header>
-      <motion.div variants={revealItem} className="contact-terminal spotlight-card" onMouseMove={(event) => Object.assign(event.currentTarget.style, spotlight(event))}>
+      <motion.div variants={revealItem} className="contact-terminal group relative overflow-hidden bg-[#0a0a10]/60 backdrop-blur-xl border border-white/[0.08] shadow-[0_8px_32px_0_rgba(0,0,0,0.36)] rounded-2xl spotlight-card" onMouseMove={(event) => Object.assign(event.currentTarget.style, spotlight(event))}>
         <div className="terminal-topbar">
           <div className="terminal-dots"><i /><i /><i /></div>
           <span><TerminalSquare size={14} /> CONTACT.SHELL</span>
@@ -650,13 +784,13 @@ function SiteFrame() {
   };
 
   return (
-    <div className="site-shell min-h-screen overflow-x-hidden bg-zinc-950 text-zinc-100">
+    <div className="site-shell min-h-screen overflow-x-hidden bg-[#050508] text-zinc-100">
       <div className="dot-grid" aria-hidden="true" />
       <div className="ambient-glow" aria-hidden="true" />
       <AmbientCursor />
 
       <header className="site-header">
-        <nav className="floating-nav" aria-label="Main navigation">
+        <nav className="floating-nav bg-[#0a0a10]/60 backdrop-blur-xl border border-white/[0.08] shadow-[0_8px_32px_0_rgba(0,0,0,0.36)]" aria-label="Main navigation">
           <Link to="/" className="nav-brand" aria-label="Saujan Paudel home"><img src="/assets/saujan-portrait.png" alt="" className="nav-avatar" width="36" height="36" /><span>saujan.pdl</span></Link>
           <div className="desktop-nav-links">
             {links.map((item) => (
@@ -688,7 +822,7 @@ function SiteFrame() {
 
       <AnimatePresence mode="wait" initial={false}>
         <Routes location={location} key={location.pathname}>
-          <Route path="/" element={<HomePage onCopy={copyValue} copyStatus={copyStatus} />} />
+          <Route path="/" element={<HomePage onCopy={copyValue} copyStatus={copyStatus} onOpenResume={() => setResumeOpen(true)} />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/projects" element={<ProjectsPage />} />
           <Route path="/leadership" element={<LeadershipPage />} />
