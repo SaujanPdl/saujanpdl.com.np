@@ -1,0 +1,122 @@
+# Role & Architecture Guidelines
+You are an elite frontend engineer and UI/UX designer specializing in high-performance, developer-first personal portfolios. 
+
+Build a high-end, responsive, single-page developer portfolio for **Saujan Paudel**. The site must avoid looking like a cookie-cutter AI generation: NO generic corporate buzzwords (e.g., "passionate visionary bridging design and tech"), NO clunky spinning 3D cubes, NO noisy confetti, and NO empty template filler. Everything must feel human-crafted, deliberate, fast, and engineered with top-tier motion design.
+
+---
+
+### Tech Stack
+- **Framework:** Next.js 14+ (App Router) or React + Vite (TypeScript preferred)
+- **Styling:** Tailwind CSS (configured with dark zinc palette)
+- **Icons:** `lucide-react`
+- **Animations:** `framer-motion` (utilizing spring physics, staggered entrances, layout transitions, and interactive mouse-glow boundaries)
+
+---
+
+### Visual Identity & Theme
+- **Background:** Deep zinc/slate `#09090b` with a subtle SVG dot/grid pattern and subtle radial spotlight hover gradients.
+- **Borders & Dividers:** High-precision subtle borders (`border-zinc-800/80` or `border-zinc-700/50` on hover).
+- **Typography:** Monospace accent typography (`font-mono`) for metadata, status tags, badges, and terminal blocks; crisp sans-serif (`Inter` or `Geist Sans`) for body and titles.
+- **Accent Colors:** Emerald (`#10b981`) for live status indicators, Indigo/Violet (`#6366f1` / `#8b5cf6`) for active links and gradient accents.
+
+---
+
+### Motion & Animation Rules (Top-Tier Polish)
+1. **Entrance Animations:** Staggered fade-up (`y: 20` to `y: 0`, opacity `0` to `1`) using smooth cubic-bezier (`[0.21, 0.47, 0.32, 0.98]`).
+2. **Interactive Cards:** Hover states should include a subtle gradient border reveal that tracks mouse position, plus a delicate lift (`y: -3px`) and shadow transition.
+3. **Micro-Interactions:**
+   - Active status pill with a pulsing emerald radar ring (`animate-ping`).
+   - One-click copy buttons for email and phone with instant tactile feedback (icon morph from `Copy` to `Check` with tooltip: "Copied to clipboard!").
+   - Filter pills with dynamic Framer Motion layout shift (`layoutId="activeFilter"`).
+4. **Interactive Terminal Component:** A real mock macOS/Linux terminal in the Hero section displaying actual Python directory triage code using `pathlib` and `shutil`, with simulated syntax highlighting and a blinking cursor.
+
+---
+
+### Personal & Contact Data (Strict Accuracy)
+- **Full Name:** Saujan Paudel
+- **Primary Roles:** Computer Science Student • Python Automation & Tools • Community Representative
+- **Location:** Nepal (GMT+5:45)
+- **Email:** `saujanpaudel12@gmail.com` (With interactive 1-click clipboard copy)
+- **Phone:** `+977 9745985171` (With 1-click copy & tel: link)
+- **GitHub:** `https://github.com/SaujanPdl`
+- **LinkedIn:** `https://www.linkedin.com/in/saujanpaudel/`
+- **Resume Action:** Fixed in Navbar & Hero — opens a rich modal preview featuring an education overview, core skills, leadership breakdown, and a direct download button.
+
+---
+
+### Page Structure & Content
+
+#### 1. Sticky Navigation Bar:
+- Glassmorphic backdrop (`backdrop-blur-md bg-zinc-950/75 border-b border-zinc-800/60`).
+- Left: Brand mark `saujan.pdl` (with interactive hover state).
+- Center: Quick anchor links (`#about`, `#skills`, `#projects`, `#leadership`, `#contact`).
+- Right: "View Resume" button (triggering modal) and quick GitHub/LinkedIn icon buttons.
+
+#### 2. Hero Section:
+- **Left Column:**
+  - Status indicator: `🟢 Available for Projects & Internships`.
+  - Heading: "Building automated workflows, systems & developer tools."
+  - Humanized Intro: "CS student focused on Python filesystem engineering, algorithmic problem solving, and community technology leadership."
+  - Primary Action Buttons:
+    - `View Projects` (smooth scroll)
+    - `Copy Email` (triggers clipboard copy + animated check badge)
+    - Direct social buttons for GitHub and LinkedIn.
+- **Right Column:**
+  - Interactive Terminal Card featuring realistic Python file sorting code:
+    ```python
+    from pathlib import Path
+    import shutil
+
+    class AutomatedPipeline:
+        def __init__(self, root: str):
+            self.root = Path(root)
+
+        def organize_workspace(self):
+            # Batch organizes files by extension & logs metrics
+            for item in self.root.iterdir():
+                if item.is_file():
+                    target = self.root / item.suffix[1:].upper()
+                    target.mkdir(exist_ok=True)
+                    shutil.move(str(item), str(target / item.name))
+    ```
+
+#### 3. Core Technical Stack:
+Categorized interactive pill grids:
+- **Languages:** Python 3.x, C++, JavaScript (ES6+), SQL, HTML5/CSS3
+- **Automation & Scripting:** `pathlib`, `shutil`, Web Scraping (BeautifulSoup, Requests, Selenium), OS Workflow Scripts
+- **Core CS Foundations:** Data Structures & Algorithms, Computer Networks, Linux/Bash, Git/GitHub
+- **Workspace Architecture & Tools:** Notion Advanced Databases & Systems, Google Gems Config, Automation Pipelines
+
+#### 4. Featured Projects (Case-Study Architecture):
+Each project card must display: Title, Context/Problem, Technical Implementation, Tags, and Action Buttons (Source Code / Live Demo).
+- **Project 1: Python Automation & Workspace Triage Engine**
+  - *Context:* Automates complex directory hygiene, extension sorting, and batch file triage for high-volume local environments.
+  - *Tech:* Python 3, `pathlib`, `shutil`, Multi-threading.
+  - *Links:* GitHub repo (`SaujanPdl/15day-automation-sprint`).
+- **Project 2: Resilient Web Scraping & Data Pipeline**
+  - *Context:* Automated script for extracting structured data, handling rate limits, and parsing nested DOM structures.
+  - *Tech:* Python, BeautifulSoup4, Requests, CSV/JSON Pipelines.
+- **Project 3: Notion Productivity Architecture & Student OS**
+  - *Context:* Full-scale student tracking system, academic review modules, and custom workspace engines designed for Gumroad release.
+  - *Tech:* Notion Formulas 2.0, Database Relational Design, Workspace Architecture.
+
+#### 5. Leadership & Community Impact:
+- **Role:** College Representative & Organizer — **Code for Change Kathmandu**
+- **Highlights:**
+  - Directed and coordinated regional hackathons, Ideathons, and CodeFest events across Kathmandu colleges (e.g., Techspire College, Kathford College, WhiteHouse College).
+  - Spearheaded hands-on workshops including *"Your AI Guide"* and developer career development sessions.
+  - Managed student outreach and collaborative learning challenges (111 Days Learning Challenge).
+
+#### 6. Resume Modal:
+- Animated overlay modal triggered from the Navbar or Hero.
+- Clean structured view of:
+  - Education & CS Coursework (DSA, Networks, Python)
+  - Key Technical Proficiencies
+  - Leadership Track Record
+  - Direct Action: "Download Full PDF" button and "Close" icon.
+
+#### 7. Contact Section & Footer:
+- Direct email card (`saujanpaudel12@gmail.com`) with instant copy button.
+- Direct phone card (`+977 9745985171`) with instant copy and call trigger.
+- Quick link to GitHub (`https://github.com/SaujanPdl`) and LinkedIn (`https://www.linkedin.com/in/saujanpaudel/`).
+- Minimal footer: "Crafted by Saujan Paudel • Built with Next.js, Tailwind CSS & Framer Motion".

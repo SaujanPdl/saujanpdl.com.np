@@ -1,0 +1,52 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2154 >>
+stream
+BT /F1 22 Tf 0.74 0.66 0.98 rg 58 750 Td (SAUJAN PAUDEL) Tj ET
+BT /F1 11 Tf 0.15 0.15 0.18 rg 58 720 Td (Computer Science Student | Automation & Systems) Tj ET
+BT /F1 9 Tf 0.35 0.35 0.4 rg 58 702 Td (Pokhara, Nepal \(UTC+5:45\) | saujanpaudel12@gmail.com | +977 9745985171) Tj ET
+BT /F1 12 Tf 0.36 0.28 0.68 rg 58 677 Td (TECHNICAL STACK) Tj ET
+BT /F1 9 Tf 0.15 0.15 0.18 rg 58 658 Td (Languages: Python 3.12, TypeScript, JavaScript, C++, SQL) Tj ET
+BT /F1 9 Tf 0.15 0.15 0.18 rg 58 643 Td (Frameworks: Next.js, React, Prisma ORM, Discord API) Tj ET
+BT /F1 9 Tf 0.15 0.15 0.18 rg 58 628 Td (Systems: Linux / Bash, pathlib, shutil, automation workflows) Tj ET
+BT /F1 9 Tf 0.15 0.15 0.18 rg 58 613 Td (Databases: PostgreSQL, relational data modeling, Notion databases) Tj ET
+BT /F1 12 Tf 0.36 0.28 0.68 rg 58 589 Td (PROJECTS) Tj ET
+BT /F1 10 Tf 0.15 0.15 0.18 rg 58 570 Td (Full-Stack Discord Bot & Live Ops Engine) Tj ET
+BT /F1 8 Tf 0.3 0.3 0.34 rg 58 556 Td (Slash-command lifecycle, live heartbeat monitoring, AutoMod, invite analytics, reaction roles.) Tj ET
+BT /F1 10 Tf 0.15 0.15 0.18 rg 58 543 Td (Python Automation & Workspace Pipeline) Tj ET
+BT /F1 8 Tf 0.3 0.3 0.34 rg 58 529 Td (Automated directory hygiene, intelligent format sorting, and batch file triage with pathlib and shutil.) Tj ET
+BT /F1 10 Tf 0.15 0.15 0.18 rg 58 516 Td (Resilient Web Scraping & Data Pipeline) Tj ET
+BT /F1 8 Tf 0.3 0.3 0.34 rg 58 502 Td (Rate-limited DOM parsing, error recovery, and structured CSV / JSON dataset generation.) Tj ET
+BT /F1 12 Tf 0.36 0.28 0.68 rg 58 479 Td (COMMUNITY & LEADERSHIP) Tj ET
+BT /F1 10 Tf 0.15 0.15 0.18 rg 58 460 Td (College Representative, Code for Change Kathmandu) Tj ET
+BT /F1 8 Tf 0.3 0.3 0.34 rg 58 445 Td (Contributed to CodeFest 2026, AI Guide workshops, and technology ideathons.) Tj ET
+BT /F1 12 Tf 0.36 0.28 0.68 rg 58 422 Td (EDUCATION & ACADEMIC CORE) Tj ET
+BT /F1 9 Tf 0.15 0.15 0.18 rg 58 403 Td (Computer Science | Data Structures & Algorithms, Computer Networks, practical software development.) Tj ET
+BT /F1 8 Tf 0.35 0.35 0.4 rg 58 383 Td (GitHub: github.com/SaujanPdl | LinkedIn: linkedin.com/in/saujanpaudel) Tj ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000002447 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+2517
+%%EOF
